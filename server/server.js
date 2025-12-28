@@ -7,29 +7,38 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
+
+/* ------------------ CORS CONFIG ------------------ */
+
+const appCors = cors({
+    origin: process.env.FRONTEND_APP_URL,
+    credentials: true
+});
+app.use(appCors);
+
+app.use(express.json());
+
+/* ------------------ SOCKET.IO ------------------ */
 const io = socketIO(server, {
     cors: {
-        origin: "http://localhost:3000",
-        methods: ["GET", "POST"]
+        origin: process.env.FRONTEND_SOCKET_URL,
+        credentials: true
     }
 });
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// MongoDB connection
+/* ------------------ DATABASE ------------------ */
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('MongoDB connected'))
-    .catch(err => console.log(err));
+    .catch(err => console.error(err));
 
-// Routes
+/* ------------------ ROUTES ------------------ */
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/tasks', require('./routes/tasks'));    
+app.use('/api/tasks', require('./routes/tasks'));
 
-// Socket.io
+/* ------------------ SOCKET EVENTS ------------------ */
 io.on('connection', (socket) => {
-    console.log('New client connected');
+    console.log('Client connected:', socket.id);
+
     socket.on('taskCreated', (task) => {
         socket.broadcast.emit('taskCreated', task);
     });
@@ -43,10 +52,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log('Client disconnected');
+        console.log('Client disconnected:', socket.id);
     });
 });
 
+/* ------------------ SERVER ------------------ */
 const PORT = process.env.PORT || 5000;
-
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () =>
+    console.log(`Server running on port ${PORT}`)
+);

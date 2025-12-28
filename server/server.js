@@ -16,7 +16,7 @@ const corsOptions = {
         if (!origin) return callback(null, true);
 
         // Allow localhost (development)
-        if (origin === 'http://localhost:3000') {
+        if (origin === 'http://localhost:3001') {
             return callback(null, true);
         }
 
@@ -41,7 +41,7 @@ const io = socketIO(server, {
             if (!origin) return callback(null, true);
 
             if (
-                origin === 'http://localhost:3000' ||
+                origin === 'http://localhost:3001' ||
                 origin.endsWith('.vercel.app')
             ) {
                 return callback(null, true);
